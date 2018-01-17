@@ -60,7 +60,6 @@ print tradedate.truncate(before='2017-10-11')
 '''
 
 #将ContractSwap中的date定位到源文件中的index
-#!!!!DCE.C,SHFE.ZN+有问题，没有跑完，要专门再跑一次
 contractlist=pd.read_excel(DC.PUBLIC_DATA_PATH+'ContractList.xlsx')['Contract']
 for symbol in contractlist:
     swapdf=pd.read_csv('D:\\002 MakeLive\DataCollection\\vitualContract\\'+symbol+'ContractSwap.csv')
