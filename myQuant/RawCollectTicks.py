@@ -14,8 +14,8 @@ contractlist=pd.read_excel(DC.PUBLIC_DATA_PATH+'Contract.xlsx')['Contract']
 for c in contractlist:
     exchange_id,sec_id=c.split('.',1)
     symbol=exchange_id+'.'+sec_id
-    tradedates=md.get_calendar(exchange_id, "2017-10-16", "2017-12-05")
-    bars=md.get_dailybars(symbol, '2017-10-13','2017-10-13')#获取上一个交易日最后的持仓量
+    tradedates=md.get_calendar(exchange_id, "2018-04-01", "2018-04-27")
+    bars=md.get_dailybars(symbol, '2018-03-30','2018-03-30')#获取上一个交易日最后的持仓量
     lastposition=bars[0].position
     for td in tradedates:
         oprdate=td.strtime[0:10]              ## 交易日
@@ -33,10 +33,10 @@ for c in contractlist:
                 if tick.trade_type == 1 or tick.trade_type == 2:
                     delta_long = delta_position / 2
                     delta_short = delta_position / 2
-                elif tick.trade_type == 3 or tick.trade_type == 6:
+                elif tick.trade_type == 3 or tick.trade_type == 5:
                     delta_long = delta_position
                     delta_short = 0
-                elif tick.trade_type == 4 or tick.trade_type == 5:
+                elif tick.trade_type == 4 or tick.trade_type == 6:
                     delta_short = delta_position
                     delta_long=0
 

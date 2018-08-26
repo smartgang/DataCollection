@@ -2,6 +2,7 @@
 import DATA_CONSTANTS as DC
 import pandas as pd
 import numpy
+import time
 from gmsdk import *
 
 def updateRawdataByDay():
@@ -20,12 +21,14 @@ def updateRawdataByDay():
                 rawdf=pd.concat([rawdf,df1])
             rawdf=rawdf.reset_index(drop=True)
             rownum=rawdf.shape[0]
-            rawdf['Unnamed: 0']=numpy.arange(0,rownum)
-            rawdf.drop('Unnamed: 0.1',axis=1,inplace=True)
+            #rawdf['Unnamed: 0']=numpy.arange(0,rownum)
+            rawdf.drop('Unnamed: 0',axis=1,inplace=True)
             todatapath= DC.BAR_DATA_PATH + symbol + '\\'
             rawdf.to_csv(todatapath+symbol+' '+str(K_MIN)+'.csv')
 
-def updateRawdataByPeriod(K_MIN_set,contractlist,enddate):
+def updateRawdataByPeriod(K_MIN_set,contractlist,startdate,enddate):
+    #将raw data文件夹中某一段时间的数据，拼接到bar data中
+    #每月下载数据后，使用此函数更新数据
     for K_MIN in K_MIN_set:
         for c in contractlist:
             exchange_id,sec_id=c.split('.',1)
@@ -33,14 +36,41 @@ def updateRawdataByPeriod(K_MIN_set,contractlist,enddate):
             datapath = DC.RAW_DATA_PATH + symbol + '\\'
             todatapath = DC.BAR_DATA_PATH + symbol + '\\'
             rawdf=pd.read_csv(todatapath+symbol+' '+str(K_MIN)+'.csv')
+            startutc = float(time.mktime(time.strptime(startdate+" 00:00:00", "%Y-%m-%d %H:%M:%S")))
+            rawdf = rawdf.loc[(rawdf['utc_time'] < startutc) ]
             print symbol + ' ' + str(K_MIN) + ' ' + enddate
             df1=pd.read_csv(datapath+symbol+enddate+' '+str(K_MIN)+'.csv')
+            df1=df1.loc[df1['utc_time']> startutc]
             rawdf=pd.concat([rawdf,df1])
             rawdf.reset_index(drop=True,inplace=True)
             rownum=rawdf.shape[0]
             rawdf['Unnamed: 0']=numpy.arange(0,rownum)
             rawdf.drop('Unnamed: 0.1',axis=1,inplace=True)
 
+            rawdf.to_csv(todatapath+symbol+' '+str(K_MIN)+'.csv')
+
+def insertRawdataByPeriod(K_MIN_set,contractlist,startdate,enddate):
+    #将raw data文件夹中某一段时间的数据，拼接到bar data中
+    #每月下载数据后，使用此函数更新数据
+    for K_MIN in K_MIN_set:
+        for c in contractlist:
+            exchange_id,sec_id=c.split('.',1)
+            symbol=exchange_id+'.'+sec_id
+            datapath = DC.RAW_DATA_PATH + symbol + '\\'
+            todatapath = DC.BAR_DATA_PATH + symbol + '\\'
+            rawdf=pd.read_csv(todatapath+symbol+' '+str(K_MIN)+'.csv')
+            startutc = float(time.mktime(time.strptime(startdate + " 00:00:00", "%Y-%m-%d %H:%M:%S")))
+            endutc = float(time.mktime(time.strptime(enddate + " 23:59:59", "%Y-%m-%d %H:%M:%S")))
+            headdf = rawdf.loc[(rawdf['utc_time'] < startutc)]
+            taildf = rawdf.loc[(rawdf['utc_time'] >= endutc)]
+            df1 = pd.read_csv(datapath+symbol+enddate+' '+str(K_MIN)+'.csv')
+            df1 = df1.loc[(df1['utc_time'] >= startutc) & (df1['utc_time'] < endutc)]
+            rawdf = pd.concat([headdf, df1, taildf])
+            rawdf.reset_index(drop=True,inplace=True)
+            rownum=rawdf.shape[0]
+            rawdf['Unnamed: 0']=numpy.arange(0,rownum)
+            rawdf.drop('Unnamed: 0.1',axis=1,inplace=True)
+            print ("insert data of %s %d from %s to %s finished!" % (symbol, K_MIN, startdate, enddate))
             rawdf.to_csv(todatapath+symbol+' '+str(K_MIN)+'.csv')
 
 def concatRawdata():
@@ -92,6 +122,8 @@ def copyRawtoBar(K_MIN_set,contractlist,enddate):
             print symbol + ' ' + str(K_MIN) + ' ' + enddate
             rawdf.to_csv(todatapath+symbol+' '+str(K_MIN)+'.csv')
 
+
+
 if __name__ == '__main__':
     contractlist=pd.read_excel(DC.PUBLIC_DATA_PATH+'Contract.xlsx')['Contract']
     tradedatelist={
@@ -100,9 +132,10 @@ if __name__ == '__main__':
         'DCE':pd.read_csv(DC.PUBLIC_DATA_PATH+'DCE tradedates.csv'),
         'SHFE':pd.read_csv(DC.PUBLIC_DATA_PATH+'SHFE tradedates.csv')
     }
-    K_MIN_set=[1800,3600]
-    enddate="2017-12-30"
-    #updateRawdataByPeriod(K_MIN_set,contractlist,enddate)
+    K_MIN_set=[0]
+    startdate="2018-02-01"
+    enddate="2018-03-01"
+    #updateRawdataByPeriod(K_MIN_set,contractlist,startdate,enddate)
     #concatRawdata()
     #concatTicksdata()
     copyRawtoBar(K_MIN_set,contractlist,enddate)

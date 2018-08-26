@@ -5,6 +5,8 @@ import DATA_CONSTANTS as DC
 #这个数据用的时候还要再洗一次：
 #ticks数据中有些分钟数是交易时间外的，要拿1分钟的数据再做index筛选一次
 
+#这个文件是用来计算多空持仓量数据的
+
 contractlist=pd.read_excel(DC.PUBLIC_DATA_PATH+'Contract.xlsx')['Contract']
 
 K_MIN=600
@@ -27,7 +29,7 @@ for symbol in contractlist:
     for oprdate in tradedate:
         filename=DC.TICKS_DATA_PATH+symbol+'\\'+symbol+oprdate+'ticks.csv'
         df=pd.read_csv(filename)
-        df.index=pd.to_datetime(df['utc_time']-df['utc_time']%K_MIN,unit='s')
+        df.index=pd.to_datetime(df['utc_time']-df['utc_time']%K_MIN,unit='s')#用K_MIN的整数倍时间做index
         df=df.tz_localize(tz='PRC')
         positiongroued=df['delta_position'].groupby(df.index)
         longgrouped=df['position_long'].groupby(df.index)
