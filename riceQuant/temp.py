@@ -22,16 +22,15 @@ def contractMap_add_life_utc():
 
 
 def contractMap_mod_domain_utc():
-    #rq.init()
+    rq.init()
     # 为contractMap文件增加life_utc列
     cm = pd.read_csv('D:\\002 MakeLive\DataCollection\public data\\contractMap.csv')
     domain_start_utc_list = []
     domain_end_utc_list = []
-    #cm['domain_start_date'] = cm['domain_start_date'].str.replace('\\', '-')
-    #cm['domain_end_date'] = cm['domain_end_date'].str.replace('\\', '-')
+    cm['domain_start_date'] = cm['domain_start_date'].str.replace('\\', '-')
+    cm['domain_end_date'] = cm['domain_end_date'].str.replace('\\', '-')
     cm['listed_date'] = cm['listed_date'].str.replace('\\', '-')
     cm['maturity_date'] = cm['maturity_date'].str.replace('\\', '-')
-    '''
     for n, rows in cm.iterrows():
         first_date = rows['domain_start_date']
         predate = get_previous_trading_date(first_date, country='cn')
@@ -43,7 +42,6 @@ def contractMap_mod_domain_utc():
     cm['domain_end_utc'] = domain_end_utc_list
     #cm.drop('Unnamed: 0.1', axis=1, inplace=True)
     #cm['Unnamed: 0']=range(cm.shape[0])
-    '''
     cm.to_csv('contractMap2.csv', index=False)
     pass
 
@@ -90,8 +88,8 @@ def process_previous_trading_date():
 
 if __name__=="__main__":
     #contractMap_add_life_utc()
-    #ontractMap_mod_domain_utc()
+    contractMap_mod_domain_utc()
     #contract_domain_time_check()
     #get_trading_date()
-    process_previous_trading_date()
+    #process_previous_trading_date()
     pass

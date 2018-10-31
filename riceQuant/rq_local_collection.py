@@ -9,13 +9,13 @@ rq.init()
 
 
 def colletion_test():
-    startdate = '2017-09-15'
-    enddate = '2018-08-20'
-    id = 'RB1901'
+    startdate = '2018-09-01'
+    enddate = '2018-09-05'
+    id = 'J1901'
     freq = '1m'
     #freq = 'tick'
     bardata = get_price(id, frequency=freq, start_date=startdate, end_date=enddate)
-    bardata.to_csv("%s_%s_1m.csv"%(id,enddate))
+    bardata.to_csv("%s_%s_1m.csv" % (id, enddate))
     print ("%s %s from %s to %s collection finished" % (id, freq, startdate, enddate))
 
 

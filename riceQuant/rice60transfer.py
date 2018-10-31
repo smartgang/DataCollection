@@ -36,6 +36,7 @@ def generatNightAdj2(symbol):
     # 生成夜盘调整标识文件
     print symbol
     folder ="D:\\002 MakeLive\DataCollection\\bar data\\"+symbol
+    #folder = ("rqdata_raw_%s\\" % symbol)
     rawfilename = symbol+' 60.csv'
     rawdata = pd.read_csv(folder+'\\'+rawfilename)
     knum = rawdata.shape[0]
@@ -55,7 +56,7 @@ def generatNightAdj2(symbol):
     kdf.loc[kdf['real'] >= kdf['total'], 'isNight'] = True  # 米筐有时候会在按变换夜盘之前的时间，插一下假数据，导致real>total
     kdf['adjust'] = kdf['total'] % 60
     kdf['night_adj'] = kdf['night'] % 60
-    kdf.to_csv('rqdata_raw_'+symbol+'\\'+symbol+'60adj.csv')
+    kdf.to_csv("rqdata_raw_" + symbol + '\\' + symbol +'60adj.csv')
 
 
 def rice60transfer(symbol, enddate):

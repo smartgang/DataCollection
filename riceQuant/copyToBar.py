@@ -15,14 +15,7 @@ def copyToBar(symbollist,domain_symbol, enddate, bar_type_list):
             srcfile = "%s\\%s %d_%s.csv" % (srcpath, symbol, bar_type, enddate)
             dstfile = destpath + "%s %d.csv" % (symbol, bar_type)
             shutil.copyfile(srcfile, dstfile)
-    """
-    # 拷贝主连数据
-    print ("copying %s %d %s" % (domain_symbol, 60, enddate))
-    srcfile = "%s\\%s %d_%s.csv" % (srcpath, domain_symbol, 60, enddate)
-    dstfile = destpath + "%s %d.csv" % (domain_symbol, 60)
-    shutil.copyfile(srcfile, dstfile)
-    print "copy done"
-    """
+
 
 
 def copyToBar2(symbollist,domain_symbol,bar_type_list):
@@ -45,6 +38,33 @@ def copyToBar2(symbollist,domain_symbol,bar_type_list):
     shutil.copyfile(srcfile, dstfile)
     print "copy done"
     """
+
+def copyToBarTemp(symbollist,domain_symbol,bar_type_list):
+    """适配riceContractDataTransfer2"""
+    #srcpath = 'riceToMyquant '+domain_symbol
+    srcpath = ("rqdata_raw_%s\\" % domain_symbol)
+    destpath = 'D:\\002 MakeLive\DataCollection\\bar data_temp\\'+domain_symbol+'\\'
+    try:
+        os.mkdir(destpath)
+    except:
+        pass
+    for symbol in symbollist:  # 拷贝单合约数据
+        for bar_type in bar_type_list:
+            print ("copying %s %d" % (symbol, bar_type))
+            srcfile = "%s\\%s %d.csv" % (srcpath, symbol, bar_type)
+            dstfile = destpath + "%s %d.csv" % (symbol, bar_type)
+            shutil.copyfile(srcfile, dstfile)
+
+def copyDominToBarTemp(domain_symbol,bar_type_list):
+    """适配riceContractDataTransfer2"""
+    #srcpath = 'riceToMyquant '+domain_symbol
+    srcpath = 'D:\\002 MakeLive\DataCollection\\bar data\\'+domain_symbol+'\\'
+    destpath = 'D:\\002 MakeLive\DataCollection\\bar data_temp\\'+domain_symbol+'\\'
+    for bar_type in bar_type_list:
+        print ("copying %s %d" % (domain_symbol, bar_type))
+        srcfile = "%s\\%s %d.csv" % (srcpath, domain_symbol, bar_type)
+        dstfile = destpath + "%s %d.csv" % (domain_symbol, bar_type)
+        shutil.copyfile(srcfile, dstfile)
 
 if __name__=='__main__':
     os.chdir('D:\\002 MakeLive\DataCollection\\ricequant data\\')

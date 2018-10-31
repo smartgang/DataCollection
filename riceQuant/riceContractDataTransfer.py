@@ -275,11 +275,11 @@ if __name__ == '__main__':
             transfer1mTo30m(idlist, domain_symbol, enddate)
     else:
         symboldf = pd.read_csv('D:\\002 MakeLive\DataCollection\public data\\contractMap.csv')
-        domain = 'SHFE.RB'
-        enddate = '2018-08-20'
+        domain = 'DCE.J'
+        enddate = '2018-09-05'
         rbdf = symboldf.loc[symboldf['domain_symbol'] == domain]
         #idlist = rbdf['symbol'].tolist()
-        idlist = ['RB1901']
+        idlist = ['J1901']
         riceToMyquant1m(idlist, domain, enddate)
         #transfer1mTo3m(idlist, domain, enddate)
         #transfer1mTo5m15m(idlist, domain, enddate)

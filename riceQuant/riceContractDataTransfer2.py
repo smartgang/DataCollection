@@ -6,10 +6,11 @@ riceContractDataTransfer2是为了处理不带enddate的数据，即一次性下
 import time
 import pandas as pd
 from datetime import datetime
-from copyToBar import copyToBar2
+from copyToBar import copyToBar2, copyToBarTemp, copyDominToBarTemp
 from symbolsToDomain import symbolsToDomain
 from rice60transfer import generatNightAdj2, transfer1mTo60m2
 import os
+import multiprocessing
 
 
 # 时间格式转换
@@ -70,6 +71,42 @@ def riceToMyquant1m(symbollist, domain_symbol):
         tofilename = "%s %d.csv" % (symbol, bar_type)
         myquantdf.to_csv(rawfolder + tofilename, index=False)
 
+
+# 2018-04-02：米筐数据转换
+def riceToMyquant1m_domain(domain_symbol):
+    rawfolder = ("rqdata_raw_%s\\" % domain_symbol)
+    bar_type = 60
+    print('Processing domain data of %s bartype%d ' % (domain_symbol, bar_type))
+    filename = rawfolder + "rqdata_raw_domain_of_%s_1m.csv" % (domain_symbol)
+    exchange, sec = domain_symbol.split('.')
+    ricedf = pd.read_csv(filename)
+    ricedf['utc_endtime'] = ricedf.apply(lambda t: getEndutc(t), axis=1)
+    ricedf['utc_time'] = ricedf['utc_endtime'] - bar_type
+    ricedf['strtime'] = ricedf.apply(lambda t: getstrtime(t), axis=1)
+    ricedf['strendtime'] = ricedf.apply(lambda t: getstrendtime(t), axis=1)
+    myquantdf = pd.DataFrame()
+    myquantdf['strtime'] = ricedf['strtime']
+    myquantdf['strendtime'] = ricedf['strendtime']
+    myquantdf['utc_time'] = ricedf['utc_time']
+    myquantdf['utc_endtime'] = ricedf['utc_endtime']
+    myquantdf['open'] = ricedf['open']
+    myquantdf['high'] = ricedf['high']
+    myquantdf['low'] = ricedf['low']
+    myquantdf['close'] = ricedf['close']
+    myquantdf['volume'] = ricedf['volume']
+    myquantdf['amount'] = ricedf['total_turnover']
+    myquantdf['position'] = ricedf['open_interest']
+    myquantdf['limit_up'] = ricedf['limit_up']
+    myquantdf['limit_down'] = ricedf['limit_down']
+    myquantdf['adj_factor'] = 0
+    myquantdf['pre_close'] = 0
+    myquantdf['trading_date'] = ricedf['trading_date']
+    myquantdf['exchange'] = exchange
+    myquantdf['sec_id'] = sec
+    myquantdf['symbol'] = 'domain'
+    myquantdf['bar_type'] = bar_type
+    tofilename = "%s %d.csv" % (domain_symbol, bar_type)
+    myquantdf.to_csv(rawfolder + tofilename, index=False)
 
 
 # 2018-04-02：米筐数据转换
@@ -296,24 +333,59 @@ def transfer1mTo30m(symbollist, domain_symbol):
         df10m.to_csv(rawfolder + tofname, index=False)
 
 
+def convert_one_symbol(domain_symbol, idlist, contract_map):
+    riceToMyquant1d(idlist, domain_symbol)
+    riceToMyquant1m(idlist, domain_symbol)
+    transfer1mTo3m(idlist, domain_symbol)
+    transfer1mTo5m15m(idlist, domain_symbol)
+    transfer1mTo10m(idlist, domain_symbol)
+    transfer1mTo30m(idlist, domain_symbol)
+    copyToBarTemp(idlist, domain_symbol, [0, 60, 180, 300, 600, 900, 1800])
+    copyToBar2(idlist, domain_symbol, [0, 60, 180, 300, 600, 900, 1800])  # 这个拷过去用来做主连
+    symbolsToDomain(60, domain_symbol, contract_map)
+    copyDominToBarTemp(domain_symbol, [60])
+    generatNightAdj2(domain_symbol)
+    transfer1mTo60m2(idlist, domain_symbol)
+    copyToBar2(idlist, domain_symbol, [3600])
+    copyToBarTemp(idlist, domain_symbol, [3600])
+
+
 if __name__ == '__main__':
     os.chdir('D:\\002 MakeLive\DataCollection\\ricequant data\\')
-    month_mode = False   # 为True表示是月度更新模式，则只更新该月涉及的合约
+    month_mode = True   # 为True表示是月度更新模式，则只更新该月涉及的合约
     if month_mode:
-        startdate = '2018-06-01'
+        pool = multiprocessing.Pool(multiprocessing.cpu_count() - 1)
+
+        startdate = '2018-09-01'
         domain_map = pd.read_excel('D:\\002 MakeLive\DataCollection\public data\\domainMap.xlsx')
         contract_map = pd.read_csv('D:\\002 MakeLive\DataCollection\public data\\contractMap.csv')
         active_domain_list = domain_map.loc[domain_map['active'] == True]['symbol'].tolist()
-        start_utc = int(time.mktime(time.strptime(startdate + ' 00:00:00', '%Y-%m-%d %H:%M:%S')))
+        start_utc = int(time.mktime(time.strptime(startdate + ' 16:00:00', '%Y-%m-%d %H:%M:%S')))
         for domain_symbol in active_domain_list:
             symbol_contract_map = contract_map.loc[contract_map['domain_symbol'] == domain_symbol]
-            modify_symbol = symbol_contract_map.loc[(symbol_contract_map['domain_start_utc'] > start_utc) | (symbol_contract_map['domain_end_utc'] > start_utc)]
+            #modify_symbol = symbol_contract_map.loc[(symbol_contract_map['domain_start_utc'] > start_utc) | (symbol_contract_map['domain_end_utc'] > start_utc)]
+            modify_symbol = symbol_contract_map.loc[(symbol_contract_map['maturity_utc'] > start_utc)]
             idlist = modify_symbol['symbol'].tolist()
+            pool.apply_async(convert_one_symbol, (domain_symbol, idlist, contract_map))
+            """
+            riceToMyquant1d(idlist, domain_symbol)
             riceToMyquant1m(idlist, domain_symbol)
-            #transfer1mTo3m(idlist, domain_symbol, enddate)
+            transfer1mTo3m(idlist, domain_symbol)
             transfer1mTo5m15m(idlist, domain_symbol)
             transfer1mTo10m(idlist, domain_symbol)
             transfer1mTo30m(idlist, domain_symbol)
+            copyToBarTemp(idlist, domain_symbol, [0, 60, 180, 300, 600, 900, 1800])
+            copyToBar2(idlist, domain_symbol, [0, 60, 180, 300, 600, 900, 1800])    # 这个拷过去用来做主连
+            symbolsToDomain(60, domain_symbol, contract_map)
+            copyDominToBarTemp(domain_symbol, [60])
+            generatNightAdj2(domain_symbol)
+            transfer1mTo60m2(idlist, domain_symbol)
+            copyToBar2(idlist, domain_symbol, [3600])
+            copyToBarTemp(idlist, domain_symbol, [3600])
+            """
+        pool.close()
+        pool.join()
+
     else:
         # 全量合约全部一次性清洗处理
         symboldf = pd.read_csv('D:\\002 MakeLive\DataCollection\public data\\contractMap.csv')

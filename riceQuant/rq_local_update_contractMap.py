@@ -10,8 +10,8 @@ import time
 
 rq.init()
 
-startdate = '2014-01-01'
-enddate = '2015-04-16'
+startdate = '2018-10-01'
+enddate = '2018-10-31'
 
 bookid = pd.read_excel(DC.PUBLIC_DATA_PATH + 'domainMap.xlsx')['book_id'].tolist()
 domain_map = pd.DataFrame()
@@ -53,15 +53,18 @@ for id in rice_book_list:
             symboldf.ix[symbol, 'domain_start_utc'] = int(time.mktime(time.strptime(predate.strftime("%Y-%m-%d") + ' 21:00:00', '%Y-%m-%d %H:%M:%S')))
             symboldf.ix[symbol, 'domain_end_utc'] = int(time.mktime(time.strptime(last_date + ' 16:00:00', '%Y-%m-%d %H:%M:%S')))
             symboldf.ix[symbol, 'margin_rate'] = ins.margin_rate
-            symboldf.ix[symbol, 'abbrev_symbol'] = ins.abbrev_symbol
+            #symboldf.ix[symbol, 'abbrev_symbol'] = ins.abbrev_symbol
+            symboldf.ix[symbol, 'abbrev_symbol'] = 'Null'
             symboldf.ix[symbol, 'listed_date'] = ins.listed_date
             symboldf.ix[symbol, 'listed_utc'] = int(time.mktime(time.strptime(ins.listed_date + ' 21:00:00', '%Y-%m-%d %H:%M:%S')))
             symboldf.ix[symbol, 'type'] = ins.type
             symboldf.ix[symbol, 'contract_multiplier'] = ins.contract_multiplier
             symboldf.ix[symbol, 'maturity_date'] = ins.maturity_date
             symboldf.ix[symbol, 'maturity_utc'] = int(time.mktime(time.strptime(ins.maturity_date + ' 16:00:00', '%Y-%m-%d %H:%M:%S')))
-            symboldf.ix[symbol, 'settlement_method'] = ins.settlement_method
-            symboldf.ix[symbol, 'product'] = ins.product
+            #symboldf.ix[symbol, 'settlement_method'] = ins.settlement_method
+            symboldf.ix[symbol, 'settlement_method'] = 'Null'
+            #symboldf.ix[symbol, 'product'] = ins.product
+            symboldf.ix[symbol, 'product'] = 'Null'
             symboldf.ix[symbol, 'price_tick'] = ins.tick_size()
 symboldf.to_csv('contractMap1.csv')
 print ('all contract updated!')
